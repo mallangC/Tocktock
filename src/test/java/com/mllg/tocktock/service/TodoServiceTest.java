@@ -1,6 +1,8 @@
 package com.mllg.tocktock.service;
 
 import com.mllg.tocktock.domain.requestDto.TodoAddRequest;
+import com.mllg.tocktock.domain.requestDto.TodoUpdateCheckboxRequest;
+import com.mllg.tocktock.domain.requestDto.TodoUpdateContentRequest;
 import com.mllg.tocktock.domain.responseDto.TodoDto;
 import com.mllg.tocktock.entity.Member;
 import com.mllg.tocktock.entity.Todo;
@@ -44,17 +46,16 @@ class TodoServiceTest {
             .name("test")
             .provider("google")
             .role(MemberType.USER)
-            .todoList(new ArrayList<>(List.of(
+            .todoList(new ArrayList<>(List.of(Todo.builder()
+                            .id(2L)
+                            .todoOrder(0)
+                            .content("Todo id 2 content")
+                            .isDone(false)
+                            .build(),
                     Todo.builder()
                             .id(1L)
                             .todoOrder(1)
                             .content("Todo id 1 content")
-                            .isDone(false)
-                            .build(),
-                    Todo.builder()
-                            .id(2L)
-                            .todoOrder(0)
-                            .content("Todo id 2 content")
                             .isDone(false)
                             .build()
             )))
@@ -67,6 +68,8 @@ class TodoServiceTest {
             .content("test content")
             .todoOrder(0)
             .build();
+
+    String email = "test@email.com";
 
     @Test
     @DisplayName("Todo 추가 성공")
@@ -82,7 +85,7 @@ class TodoServiceTest {
                 .build();
 
         //when
-        TodoDto result = todoService.addTodo("test@mail.com", request);
+        TodoDto result = todoService.addTodo(email, request);
         //then
         assertEquals(result.getId(), baseTodo.getId());
         assertEquals(result.getTodoOrder(), baseTodo.getTodoOrder());
@@ -104,7 +107,7 @@ class TodoServiceTest {
 
         //when
         CustomException exception = assertThrows(CustomException.class,
-                () -> todoService.addTodo("test@mail.com", request));
+                () -> todoService.addTodo(email, request));
 
         //then
         assertEquals(ErrorCode.NOT_FOUND_MEMBER, exception.getErrorCode());
@@ -115,11 +118,12 @@ class TodoServiceTest {
     @DisplayName("Todo 전체 조회")
     void getAllTodoSuccess() {
         //given
-
-        given(memberRepository.findByEmail(anyString()))
-                .willReturn(Optional.of(baseMember));
+        given(memberRepository.existsByEmail(anyString()))
+                .willReturn(true);
+        given(todoRepository.searchAllTodoByToday(anyString()))
+                .willReturn(baseMember.getTodoList());
         //when
-        List<TodoDto> todoDtoList = todoService.getAllTodo("test@gmail.com");
+        List<TodoDto> todoDtoList = todoService.getAllTodo(email);
 
         //then
         assertEquals(2L, todoDtoList.get(0).getId());
@@ -133,11 +137,254 @@ class TodoServiceTest {
     }
 
     @Test
-    @DisplayName("Todo 체크박스 ")
-    void updateTodoCheckboxSuccess () {
-      //given
-      //when
-      //then
+    @DisplayName("Todo 체크박스 수정")
+    void updateTodoCheckboxSuccess() {
+        //given
+        given(memberRepository.existsByEmail(anyString()))
+                .willReturn(true);
+
+        given(todoRepository.searchAllTodoByToday(anyString()))
+                .willReturn(baseMember.getTodoList());
+        TodoUpdateCheckboxRequest request = TodoUpdateCheckboxRequest.builder()
+                .id(1L)
+                .isDone(true)
+                .build();
+
+        //when
+        List<TodoDto> todoDtoList = todoService.updateTodoCheckbox(email, request);
+        //then
+        assertEquals(2L, todoDtoList.get(0).getId());
+        assertEquals(0, todoDtoList.get(0).getTodoOrder());
+        assertEquals(1L, todoDtoList.get(1).getId());
+        assertEquals(1, todoDtoList.get(1).getTodoOrder());
     }
 
+    @Test
+    @DisplayName("Todo 체크박스 수정 실패 - 회원을 찾을 수 없음")
+    void updateTodoCheckboxFailure1() {
+        //given
+        given(memberRepository.existsByEmail(anyString()))
+                .willReturn(false);
+
+        TodoUpdateCheckboxRequest request = TodoUpdateCheckboxRequest.builder()
+                .id(1L)
+                .isDone(true)
+                .build();
+        //when
+        CustomException exception = assertThrows(CustomException.class, () ->
+                todoService.updateTodoCheckbox(email, request));
+        //then
+        assertEquals(ErrorCode.NOT_FOUND_MEMBER, exception.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("Todo 체크박스 수정 실패 - Todolist가 비어있음")
+    void updateTodoCheckboxFailure2() {
+        //given
+        given(memberRepository.existsByEmail(anyString()))
+                .willReturn(true);
+
+        given(todoRepository.searchAllTodoByToday(anyString()))
+                .willReturn(new ArrayList<>());
+        TodoUpdateCheckboxRequest request = TodoUpdateCheckboxRequest.builder()
+                .id(1L)
+                .isDone(true)
+                .build();
+
+        //when
+        CustomException exception = assertThrows(CustomException.class, () ->
+                todoService.updateTodoCheckbox(email, request));
+        //then
+        assertEquals(ErrorCode.NOT_FOUND_TODO, exception.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("Todo 내용 수정 성공")
+    void updateTodoContentSuccess() {
+        //given
+        given(memberRepository.existsByEmail(anyString()))
+                .willReturn(true);
+        given(todoRepository.searchAllTodoByToday(anyString()))
+                .willReturn(baseMember.getTodoList());
+
+        String updatedContent = "updated content";
+
+        TodoUpdateContentRequest request =
+                TodoUpdateContentRequest.builder()
+                        .id(1L)
+                        .content(updatedContent)
+                        .build();
+        //when
+        List<TodoDto> todoDtoList = todoService.updateTodoContent(email, request);
+        //then
+        assertEquals(1L, todoDtoList.get(1).getId());
+        assertEquals(updatedContent, todoDtoList.get(1).getContent());
+    }
+
+    @Test
+    @DisplayName("Todo 내용 수정 실패 - 회원을 찾을 수 없음")
+    void updateTodoContentFailure1() {
+        //given
+        given(memberRepository.existsByEmail(anyString()))
+                .willReturn(false);
+
+        String updatedContent = "updated content";
+
+        TodoUpdateContentRequest request =
+                TodoUpdateContentRequest.builder()
+                        .id(1L)
+                        .content(updatedContent)
+                        .build();
+        //when
+        CustomException exception = assertThrows(CustomException.class, () ->
+                todoService.updateTodoContent(email, request));
+        //then
+        assertEquals(ErrorCode.NOT_FOUND_MEMBER, exception.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("Todo 내용 수정 실패 - todolist가 비어있음")
+    void updateTodoContentFailure2() {
+        //given
+        given(memberRepository.existsByEmail(anyString()))
+                .willReturn(true);
+        given(todoRepository.searchAllTodoByToday(anyString()))
+                .willReturn(new ArrayList<>());
+
+        String updatedContent = "updated content";
+
+        TodoUpdateContentRequest request =
+                TodoUpdateContentRequest.builder()
+                        .id(1L)
+                        .content(updatedContent)
+                        .build();
+        //when
+        CustomException exception = assertThrows(CustomException.class, () ->
+                todoService.updateTodoContent(email, request));
+        //then
+        assertEquals(ErrorCode.NOT_FOUND_TODO, exception.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("Todo 내용 수정 실패 - request에 맞는 id가 없음")
+    void updateTodoContentFailure3() {
+        //given
+        given(memberRepository.existsByEmail(anyString()))
+                .willReturn(true);
+        given(todoRepository.searchAllTodoByToday(anyString()))
+                .willReturn(baseMember.getTodoList());
+
+        String updatedContent = "updated content";
+
+        TodoUpdateContentRequest request =
+                TodoUpdateContentRequest.builder()
+                        .id(3L)
+                        .content(updatedContent)
+                        .build();
+        //when
+        CustomException exception = assertThrows(CustomException.class, () ->
+                todoService.updateTodoContent(email, request));
+        //then
+        assertEquals(ErrorCode.NOT_FOUND_TODO, exception.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("Todo 삭제 성공")
+    void deleteTodoSuccess() {
+        //given
+        given(memberRepository.existsByEmail(anyString()))
+                .willReturn(true);
+        given(todoRepository.searchAllTodoByToday(anyString()))
+                .willReturn(baseMember.getTodoList());
+        //when
+        todoService.deleteTodo(email, 1);
+        //then
+        verify(todoRepository, times(1)).delete(any());
+    }
+
+    @Test
+    @DisplayName("Todo 삭제 실패 - 회원을 찾을 수 없음")
+    void deleteTodoFailure1() {
+        //given
+        given(memberRepository.existsByEmail(anyString()))
+                .willReturn(false);
+        //when
+        CustomException exception = assertThrows(CustomException.class, () ->
+                todoService.deleteTodo(email, 1));
+        //then
+        assertEquals(ErrorCode.NOT_FOUND_MEMBER, exception.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("Todo 삭제 실패 - todolist가 비어있음")
+    void deleteTodoFailure2() {
+        //given
+        given(memberRepository.existsByEmail(anyString()))
+                .willReturn(true);
+        given(todoRepository.searchAllTodoByToday(anyString()))
+                .willReturn(new ArrayList<>());
+        //when
+        CustomException exception = assertThrows(CustomException.class, () ->
+                todoService.deleteTodo(email, 1));
+        //then
+        assertEquals(ErrorCode.NOT_FOUND_TODO, exception.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("Todo 삭제 실패 - id에 맞는 Todo를 찾을 수 없음")
+    void deleteTodoFailure3() {
+        //given
+        given(memberRepository.existsByEmail(anyString()))
+                .willReturn(true);
+        given(todoRepository.searchAllTodoByToday(anyString()))
+                .willReturn(baseMember.getTodoList());
+        //when
+        CustomException exception = assertThrows(CustomException.class, () ->
+                todoService.deleteTodo(email, 3));
+        //then
+        assertEquals(ErrorCode.NOT_FOUND_TODO, exception.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("Todo 완료목록 조회 성공")
+    void getAllTodoCompleteSuccess() {
+        //given
+        List<Todo> todoList = List.of(Todo.builder()
+                        .id(1L)
+                        .content("completed id 1")
+                        .todoOrder(0)
+                        .isDone(true)
+                        .build(),
+                Todo.builder()
+                        .id(2L)
+                        .content("completed id 2")
+                        .todoOrder(0)
+                        .isDone(true)
+                        .build());
+
+        given(memberRepository.existsByEmail(anyString()))
+                .willReturn(true);
+        given(todoRepository.searchAllTodoCompleted(anyString()))
+                .willReturn(todoList);
+        //when
+        List<TodoDto> todoDtoList = todoService.getAllTodoCompleted(email);
+        //then
+        assertEquals(2, todoDtoList.size());
+        assertEquals(1L, todoDtoList.get(0).getId());
+        verify(todoRepository, times(1)).searchAllTodoCompleted(any());
+    }
+
+    @Test
+    @DisplayName("Todo 완료목록 조회 실패 - 회원을 찾을 수 없음")
+    void getAllTodoCompleteFailure() {
+        //given
+
+        given(memberRepository.existsByEmail(anyString()))
+                .willReturn(false);
+        //when
+        CustomException exception = assertThrows(CustomException.class, () ->
+                todoService.getAllTodoCompleted(email));
+        //then
+        assertEquals(ErrorCode.NOT_FOUND_MEMBER, exception.getErrorCode());
+    }
 }
