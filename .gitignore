@@ -35,4 +35,5 @@ out/
 
 .vscode/
 *.http
+.env
 

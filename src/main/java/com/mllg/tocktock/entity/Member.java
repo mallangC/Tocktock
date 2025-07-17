@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Entity
 @Getter
 @Builder
@@ -18,8 +20,12 @@ public class Member extends BaseEntity{
   private Long id;
   private String name;
   private String email;
-  private String password;
+  private String provider;
+  @Column(name = "oauth2_id")
+  private String oauth2Id;
   @Enumerated(EnumType.STRING)
   private MemberType role;
+  @OneToMany(mappedBy = "member", orphanRemoval = true, fetch = FetchType.LAZY)
+  private List<Todo> todoList;
 
 }
