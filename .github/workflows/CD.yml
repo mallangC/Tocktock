@@ -1,0 +1,150 @@
+name: CD
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+env:
+  DB_URL: ${{ secrets.DB_URL }}
+  DB_USERNAME: ${{ secrets.DB_USERNAME }}
+  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+  GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID}}
+  GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET}}
+
+jobs:
+  test:
+    name: Test for Gradle
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # gradle wrapper에 대한 실행 권한 부여
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      # gradle 빌드 결과물을 초기화
+      - name: Clean Gradle Cache and Build
+        run: |
+          ./gradlew --stop
+          rm -rf ~/.gradle/caches/
+          rm -rf build/
+
+      # docker-compose 실행
+      - name: Build and Start MySQL Containers with Docker Compose
+        run: |
+          docker compose -f ./src/test/resources/ci/docker-compose.yml up -d --build --wait
+
+      - name: Verify MySQL Containers are Running
+        run: docker ps -a
+
+      # gradle 세팅
+      - name: Set up Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: '8.14.2'
+
+      # 테스트 전 애플리케이션 빌드
+      - name: Build with Gradle
+        run: ./gradlew build -x test
+
+      - name: Check application-test.yml exists
+        run: cat src/test/resources/application-test.yml || echo "application-test.yml not found"
+
+      # 테스트 진행
+      - name: Test with Gradle
+        env:
+          SPRING_PROFILES_ACTIVE: test
+          TEST_DB_MAIN_PORT: 3306
+          TEST_DB_META_PORT: 3307
+          TEST_DB_USERNAME: root
+          TEST_DB_PASSWORD: rootpassword
+        run: ./gradlew test --info
+
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          # Dockerfile이 있는 디렉토리
+          context: .
+          push: true
+          tags: ${{ env.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:1.0.0
+          platforms: linux/amd64,linux/arm64
+
+  deploy:
+
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # .env 파일 생성
+      - name: Create .env file from secrets
+        run: |
+          echo "DB_URL=${{ env.DB_URL }}" > .env
+          echo "DB_USERNAME=${{ env.DB_USERNAME }}" >> .env
+          echo "DB_PASSWORD=${{ env.DB_PASSWORD }}" >> .env    
+          echo "GOOGLE_CLIENT_ID=${{ env.GOOGLE_CLIENT_ID}}" >> .env 
+          echo "GOOGLE_CLIENT_SECRET=${{ env.GOOGLE_CLIENT_SECRET}}" >> .env 
+
+        shell: bash
+
+      # 파일 전송 단계 (.env 및 docker-compose.yml)
+      - name: Copy .env and docker-compose.yml to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          # 보낼 파일들
+          source: ".env,docker-compose.yml"
+          # EC2 인스턴스 내의 대상 디렉토리
+          target: "/home/${{ secrets.EC2_USER }}/jogakjogak"
+
+      # EC2에서 Docker Compose 실행 단계
+      - name: SSH into EC2 and run Docker Compose
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+            
+            cd /home/${{ secrets.EC2_USER }}/jogakjogak
+            
+            docker compose pull
+            docker compose up -d --force-recreate
+            
+            docker image prune -f
+            docker logout
+            echo "Deployment to EC2 completed successfully!"
