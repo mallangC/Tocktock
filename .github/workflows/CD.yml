@@ -131,7 +131,7 @@ jobs:
           # 보낼 파일들
           source: ".env,docker-compose.yml"
           # EC2 인스턴스 내의 대상 디렉토리
-          target: "/home/${{ secrets.EC2_USER }}/jogakjogak"
+          target: "/home/${{ secrets.EC2_USER }}/tocktock"
 
       # EC2에서 Docker Compose 실행 단계
       - name: SSH into EC2 and run Docker Compose
@@ -143,7 +143,7 @@ jobs:
           script: |
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
             
-            cd /home/${{ secrets.EC2_USER }}/jogakjogak
+            cd /home/${{ secrets.EC2_USER }}/tocktock
             
             docker compose pull
             docker compose up -d --force-recreate
