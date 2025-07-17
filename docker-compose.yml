@@ -11,7 +11,19 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     ports:
       - "8080:8080"
     volumes:
       - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      - redis
+
+  redis:
+    image: redis.latest
+    container_name: tocktock-redis
+    ports:
+      - "6379:6379"
+    environment:
+      TZ: Asia/Seoul
