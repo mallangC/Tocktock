@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  jogak_backend_app:
+    image: mallangc/tocktock-backend:1.0.0
+    container_name: tocktock-backend
+    environment:
+      TZ: Asia/Seoul
+      DB_URL: ${DB_URL}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+    ports:
+      - "8080:8080"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
