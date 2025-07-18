@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "https://tock-tock.com")
 @RequiredArgsConstructor
 @RestController
 public class MemberController {
