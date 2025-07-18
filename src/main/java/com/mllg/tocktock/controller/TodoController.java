@@ -3,6 +3,7 @@ package com.mllg.tocktock.controller;
 import com.mllg.tocktock.domain.requestDto.TodoAddRequest;
 import com.mllg.tocktock.domain.requestDto.TodoUpdateCheckboxRequest;
 import com.mllg.tocktock.domain.requestDto.TodoUpdateContentRequest;
+import com.mllg.tocktock.domain.requestDto.TodoUpdateOrderRequest;
 import com.mllg.tocktock.domain.responseDto.TodoDto;
 import com.mllg.tocktock.domain.responseDto.TodolistDto;
 import com.mllg.tocktock.service.TodoService;
@@ -82,6 +83,16 @@ public class TodoController {
         List<TodoDto> todoList = todoService.getAllTodoCompleted(email);
         TodolistDto todolistDto = TodolistDto.from(todoList);
         return ResponseEntity.ok(todolistDto);
+    }
+
+    @PatchMapping("/order")
+    public ResponseEntity<List<TodoDto>> updateTodoOrder(@AuthenticationPrincipal OAuth2User oauth2User,
+                                                         TodoUpdateOrderRequest request){
+        if (oauth2User == null) {
+            throw new RuntimeException("OAuth2User is null");
+        }
+        String email = oauth2User.getAttribute("email");
+        return ResponseEntity.ok(todoService.updateTodoOrder(email, request.getDraggedId(), request.getTargetId()));
     }
 
 }
