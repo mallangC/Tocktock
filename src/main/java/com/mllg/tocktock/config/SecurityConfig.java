@@ -30,22 +30,23 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(authorize -> authorize
-                    .requestMatchers("/", "/oauth2/**", "/login/**", "/logout", "/actuator/health").permitAll()
+
+                    .requestMatchers("/", "/actuator/health", "/oauth2/**", "/login/**", "/logout").permitAll()
                     .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2
-                    .defaultSuccessUrl("http://localhost:5173/loginSuccess", true)
+                    .defaultSuccessUrl("https://tock-tock.com/loginSuccess", true)
                     .failureUrl("/loginFailure")
                     .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
             )
             .exceptionHandling(exception -> exception
-                    .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("http://localhost:5173/login"))
+                    .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("https://tock-tock.com/login"))
             ).logout(logout -> logout
                     .logoutUrl("/logout")
                     .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler())
                     .invalidateHttpSession(true)
                     .deleteCookies("JSESSIONID")
-                    .logoutSuccessUrl("http://localhost:5173/login")
+                    .logoutSuccessUrl("https://tock-tock.com/login")
             );
 
     return http.build();
@@ -54,7 +55,7 @@ public class SecurityConfig {
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+    configuration.setAllowedOrigins(List.of("http://localhost:5173", "https://tock-tock.com", "https://www.tock-tock.com"));
     configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
     configuration.setAllowedHeaders(List.of("*"));
     configuration.setAllowCredentials(true);
