@@ -39,7 +39,7 @@ public class SecurityConfig {
                     .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
             )
             .exceptionHandling(exception -> exception
-                    .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("https://tock-tock.comlogin"))
+                    .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("https://tock-tock.com/login"))
             ).logout(logout -> logout
                     .logoutUrl("/logout")
                     .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler())
