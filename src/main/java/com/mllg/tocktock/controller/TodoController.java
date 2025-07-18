@@ -87,7 +87,7 @@ public class TodoController {
 
     @PatchMapping("/order")
     public ResponseEntity<List<TodoDto>> updateTodoOrder(@AuthenticationPrincipal OAuth2User oauth2User,
-                                                         TodoUpdateOrderRequest request){
+                                                         @RequestBody TodoUpdateOrderRequest request){
         if (oauth2User == null) {
             throw new RuntimeException("OAuth2User is null");
         }
