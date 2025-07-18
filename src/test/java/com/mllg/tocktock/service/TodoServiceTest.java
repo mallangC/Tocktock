@@ -19,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -60,6 +61,43 @@ class TodoServiceTest {
                             .build()
             )))
             .build();
+
+    List<Todo> todos = new ArrayList<>(Arrays.asList(Todo.builder()
+                    .id(1L)
+                    .isDone(false)
+                    .todoOrder(0)
+                    .content("completed id 1")
+                    .build(),
+            Todo.builder()
+                    .id(2L)
+                    .isDone(false)
+                    .todoOrder(1)
+                    .content("completed id 2")
+                    .build(),
+            Todo.builder()
+                    .id(3L)
+                    .isDone(false)
+                    .todoOrder(2)
+                    .content("completed id 3")
+                    .build(),
+            Todo.builder()
+                    .id(4L)
+                    .isDone(false)
+                    .todoOrder(3)
+                    .content("completed id 4")
+                    .build(),
+            Todo.builder()
+                    .id(5L)
+                    .isDone(false)
+                    .todoOrder(4)
+                    .content("completed id 5")
+                    .build(),
+            Todo.builder()
+                    .id(6L)
+                    .isDone(false)
+                    .todoOrder(5)
+                    .content("completed id 6")
+                    .build()));
 
     Todo baseTodo = Todo.builder()
             .id(1L)
@@ -378,7 +416,6 @@ class TodoServiceTest {
     @DisplayName("Todo 완료목록 조회 실패 - 회원을 찾을 수 없음")
     void getAllTodoCompleteFailure() {
         //given
-
         given(memberRepository.existsByEmail(anyString()))
                 .willReturn(false);
         //when
@@ -386,5 +423,84 @@ class TodoServiceTest {
                 todoService.getAllTodoCompleted(email));
         //then
         assertEquals(ErrorCode.NOT_FOUND_MEMBER, exception.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("Todo 순서 변경 성공 - 1 -> 4")
+    void updateTodoOrderSuccess1() {
+        //given
+        given(memberRepository.existsByEmail(anyString()))
+                .willReturn(true);
+        given(todoRepository.searchAllTodoByToday(anyString()))
+                .willReturn(todos);
+        //when
+        List<TodoDto> todoList = todoService.updateTodoOrder(email, 1L, 4L); //order 0, 3
+        //then
+        assertEquals(6, todoList.size());
+        assertEquals(2L, todoList.get(0).getId());
+        assertEquals(1L, todoList.get(2).getId());
+    }
+
+
+    @Test
+    @DisplayName("Todo 순서 변경 성공 - 4 -> 1")
+    void updateTodoOrderSuccess2() {
+        //given
+        given(memberRepository.existsByEmail(anyString()))
+                .willReturn(true);
+        given(todoRepository.searchAllTodoByToday(anyString()))
+                .willReturn(todos);
+        //when
+        List<TodoDto> todoList = todoService.updateTodoOrder(email, 4L, 1L); //order 3, 0
+        //then
+        assertEquals(6, todoList.size());
+        assertEquals(4L, todoList.get(0).getId());
+        assertEquals(1L, todoList.get(1).getId());
+        assertEquals(5L, todoList.get(4).getId());
+    }
+
+    @Test
+    @DisplayName("Todo 순서 변경 실패 - 회원을 찾을 수 없음")
+    void updateTodoOrderFailure1() {
+        //given
+        given(memberRepository.existsByEmail(anyString()))
+                .willReturn(false);
+        //when
+
+        CustomException exception = assertThrows(CustomException.class, () ->
+                todoService.updateTodoOrder(email, 4L, 1L));
+        //then
+        assertEquals(ErrorCode.NOT_FOUND_MEMBER, exception.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("Todo 순서 변경 실패 - 빈 Todolist")
+    void updateTodoOrderFailure2() {
+        //given
+        given(memberRepository.existsByEmail(anyString()))
+                .willReturn(true);
+        given(todoRepository.searchAllTodoByToday(anyString()))
+                .willReturn(new ArrayList<>());
+        //when
+        CustomException exception = assertThrows(CustomException.class, () ->
+                todoService.updateTodoOrder(email, 4L, 1L));
+        //then
+        assertEquals(ErrorCode.NOT_FOUND_TODO, exception.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("Todo 순서 변경 실패 - id에 맞는 Todo를 찾을 수 없음")
+    void updateTodoOrderFailure3() {
+        //given
+        given(memberRepository.existsByEmail(anyString()))
+                .willReturn(true);
+        given(todoRepository.searchAllTodoByToday(anyString()))
+                .willReturn(todos);
+        //when
+        CustomException exception = assertThrows(CustomException.class, () ->
+                todoService.updateTodoOrder(email, 7L, 8L));
+        //then
+        assertEquals(ErrorCode.NOT_FOUND_TODO, exception.getErrorCode());
+
     }
 }

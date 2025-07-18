@@ -147,6 +147,55 @@ public class TodoService {
         return completedTodolist.stream().map(TodoDto::from).toList();
     }
 
+    @Transactional
+    public List<TodoDto> updateTodoOrder(String email, Long draggedId, Long targetId) {
+        existsMemberByEmail(email);
+        List<Todo> todolist = todoRepository.searchAllTodoByToday(email);
+        if (todolist.isEmpty()) {
+            throw new CustomException(ErrorCode.NOT_FOUND_TODO);
+        }
+
+        Todo draggedTodo = null, targetTodo = null;
+        for (Todo todo : todolist) {
+            if (todo.getId().equals(draggedId)) {
+                draggedTodo = todo;
+            }
+            if (todo.getId().equals(targetId)) {
+                targetTodo = todo;
+            }
+        }
+        if (draggedTodo == null || targetTodo == null) {
+            throw new CustomException(ErrorCode.NOT_FOUND_TODO);
+        }
+
+        int draggedOrder = draggedTodo.getTodoOrder();
+        int targetOrder = targetTodo.getTodoOrder();
+
+        if (Math.abs(draggedOrder - targetOrder) == 1) {
+            draggedTodo.updateOrder(targetOrder);
+            targetTodo.updateOrder(draggedOrder);
+        } else if (targetOrder > draggedOrder) {
+            for (int i = draggedOrder; i < targetOrder; i++) {
+                if (todolist.get(i).getId().equals(draggedId)) {
+                    todolist.get(i).updateOrder(targetOrder - 1);
+                    continue;
+                }
+                todolist.get(i).updateOrder(todolist.get(i).getTodoOrder() - 1);
+            }
+        } else {
+            for (int i = targetOrder; i <= draggedOrder; i++) {
+                if (todolist.get(i).getId().equals(draggedId)) {
+                    todolist.get(i).updateOrder(targetOrder);
+                    continue;
+                }
+                todolist.get(i).updateOrder(todolist.get(i).getTodoOrder() + 1);
+            }
+        }
+
+        Collections.sort(todolist);
+        return todolist.stream().map(TodoDto::from).toList();
+    }
+
     private int findMaxByMemberToOrder(List<Todo> todoList) {
         Optional<Todo> orderMaxTodo = todoList.stream()
                 .max(Comparator.comparingInt(Todo::getTodoOrder));
