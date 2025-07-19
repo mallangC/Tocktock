@@ -438,7 +438,7 @@ class TodoServiceTest {
         //then
         assertEquals(6, todoList.size());
         assertEquals(2L, todoList.get(0).getId());
-        assertEquals(1L, todoList.get(2).getId());
+        assertEquals(1L, todoList.get(3).getId());
     }
 
 

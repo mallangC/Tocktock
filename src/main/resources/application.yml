@@ -47,6 +47,11 @@ spring:
             jwk-set-uri: https://www.googleapis.com/oauth2/v3/certs
             user-name-attribute: sub
 
+server:
+  servlet:
+    session:
+      timeout: 5h
+
 logging:
   level:
 #    org.springframework.security: DEBUG
