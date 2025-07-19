@@ -64,7 +64,7 @@ public class TodoController {
 
     @DeleteMapping("/{todo_id}")
     public ResponseEntity<String> deleteTodo(@AuthenticationPrincipal OAuth2User oauth2User,
-                                                    @PathVariable("todo_id") int todoId) {
+                                             @PathVariable("todo_id") int todoId) {
         if (oauth2User == null) {
             throw new RuntimeException("OAuth2User is null");
         }
@@ -87,7 +87,7 @@ public class TodoController {
 
     @PatchMapping("/order")
     public ResponseEntity<List<TodoDto>> updateTodoOrder(@AuthenticationPrincipal OAuth2User oauth2User,
-                                                         @RequestBody @Valid TodoUpdateOrderRequest request){
+                                                         @RequestBody @Valid TodoUpdateOrderRequest request) {
         if (oauth2User == null) {
             throw new RuntimeException("OAuth2User is null");
         }

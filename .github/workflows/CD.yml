@@ -17,6 +17,7 @@ env:
   DOCKERHUB_USERNAME: ${{secrets.DOCKERHUB_USERNAME}}
   DOCKERHUB_TOKEN: ${{secrets.DOCKERHUB_TOKEN}}
   DOCKER_IMAGE_NAME: ${{secrets.DOCKER_IMAGE_NAME}}
+  BASE_URL: ${{secrets.BASE_URL}}
 
 jobs:
   test:
@@ -98,7 +99,7 @@ jobs:
           # Dockerfile이 있는 디렉토리
           context: .
           push: true
-          tags: ${{ env.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:1.0.0
+          tags: ${{ env.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:1.0.1
           platforms: linux/amd64,linux/arm64
 
   deploy:
@@ -118,6 +119,7 @@ jobs:
           echo "DB_PASSWORD=${{ env.DB_PASSWORD }}" >> .env    
           echo "GOOGLE_CLIENT_ID=${{ env.GOOGLE_CLIENT_ID}}" >> .env 
           echo "GOOGLE_CLIENT_SECRET=${{ env.GOOGLE_CLIENT_SECRET}}" >> .env 
+          echo "BASE_URL=${{ env.BASE_URL}}" >> .env 
 
         shell: bash
 

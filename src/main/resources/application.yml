@@ -57,3 +57,6 @@ logging:
 #    org.springframework.security: DEBUG
     org.springframework.security.oauth2: DEBUG
     org.springframework.web: DEBUG
+
+base:
+  url: ${BASE_URL}
