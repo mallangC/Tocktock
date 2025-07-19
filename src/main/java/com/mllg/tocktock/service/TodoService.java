@@ -174,21 +174,21 @@ public class TodoService {
         if (Math.abs(draggedOrder - targetOrder) == 1) {
             draggedTodo.updateOrder(targetOrder);
             targetTodo.updateOrder(draggedOrder);
-        } else if (targetOrder > draggedOrder) {
-            for (int i = draggedOrder; i < targetOrder; i++) {
-                if (todolist.get(i).getId().equals(draggedId)) {
-                    todolist.get(i).updateOrder(targetOrder - 1);
-                    continue;
-                }
-                todolist.get(i).updateOrder(todolist.get(i).getTodoOrder() - 1);
-            }
         } else {
-            for (int i = targetOrder; i <= draggedOrder; i++) {
+            int startIndex = targetOrder, endIndex = draggedOrder, orderNum = 1;
+
+            if (targetOrder > draggedOrder) {
+                startIndex = draggedOrder;
+                endIndex = targetOrder;
+                orderNum = -1;
+            }
+
+            for (int i = startIndex; i <= endIndex; i++) {
                 if (todolist.get(i).getId().equals(draggedId)) {
                     todolist.get(i).updateOrder(targetOrder);
                     continue;
                 }
-                todolist.get(i).updateOrder(todolist.get(i).getTodoOrder() + 1);
+                todolist.get(i).updateOrder(todolist.get(i).getTodoOrder() + orderNum);
             }
         }
 
