@@ -11,7 +11,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,7 +19,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
-@CrossOrigin(origins = "https://tock-tock.com")
 @RequiredArgsConstructor
 @RestController
 public class MemberController {
@@ -45,8 +43,7 @@ public class MemberController {
   private final SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
 
   @PostMapping("/logout")
-  public ResponseEntity<String> performLogout(HttpServletRequest request, HttpServletResponse response,
-                                              Authentication authentication) {
+  public ResponseEntity<String> performLogout(HttpServletRequest request, HttpServletResponse response) {
     // 현재 인증 정보 가져오기
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
     if (auth != null) {

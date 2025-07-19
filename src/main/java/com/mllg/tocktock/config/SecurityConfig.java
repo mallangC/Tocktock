@@ -2,6 +2,7 @@ package com.mllg.tocktock.config;
 
 import com.mllg.tocktock.service.CustomOAuth2UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -22,47 +23,49 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
-  private final CustomOAuth2UserService customOAuth2UserService;
+    @Value("${base.url}")
+    private String baseUrl;
 
-  @Bean
-  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http
-            .csrf(AbstractHttpConfigurer::disable)
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .authorizeHttpRequests(authorize -> authorize
+    private final CustomOAuth2UserService customOAuth2UserService;
 
-                    .requestMatchers("/", "/actuator/health", "/oauth2/**", "/login/**", "/logout").permitAll()
-                    .anyRequest().authenticated()
-            )
-            .oauth2Login(oauth2 -> oauth2
-                    .defaultSuccessUrl("https://tock-tock.com/loginSuccess", true)
-                    .failureUrl("/loginFailure")
-                    .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
-            )
-            .exceptionHandling(exception -> exception
-                    .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("https://tock-tock.com/login"))
-            ).logout(logout -> logout
-                    .logoutUrl("/logout")
-                    .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler())
-                    .invalidateHttpSession(true)
-                    .deleteCookies("JSESSIONID")
-                    .logoutSuccessUrl("https://tock-tock.com/login")
-            );
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/", "/actuator/health", "/oauth2/**", "/login/**", "/logout").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .defaultSuccessUrl(baseUrl + "/loginSuccess", true)
+                        .failureUrl("/loginFailure")
+                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+                )
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint(baseUrl + "/login"))
+                ).logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler())
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
+                        .logoutSuccessUrl(baseUrl + "/login")
+                );
 
-    return http.build();
-  }
+        return http.build();
+    }
 
-  @Bean
-  public CorsConfigurationSource corsConfigurationSource() {
-    CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedOrigins(List.of("http://localhost:5173", "https://tock-tock.com", "https://www.tock-tock.com"));
-    configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-    configuration.setAllowedHeaders(List.of("*"));
-    configuration.setAllowCredentials(true);
-    configuration.setMaxAge(3600L);
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("http://localhost:5173", "https://tock-tock.com", "https://www.tock-tock.com"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
 
-    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-    source.registerCorsConfiguration("/**", configuration);
-    return source;
-  }
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
 }
