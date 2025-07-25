@@ -1,5 +1,6 @@
 package com.mllg.tocktock.controller;
 
+import com.mllg.tocktock.service.MemberService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,6 +25,8 @@ import java.util.Map;
 @RestController
 public class MemberController {
 
+  private final MemberService memberService;
+
   @GetMapping("/member/profile")
   public Map<String, Object> getUserInfo(@AuthenticationPrincipal OAuth2User oauth2User) {
     Map<String, Object> userInfo = new HashMap<>();
@@ -30,10 +34,6 @@ public class MemberController {
       userInfo.put("name", oauth2User.getAttribute("name"));
       userInfo.put("email", oauth2User.getAttribute("email"));
       userInfo.put("picture", oauth2User.getAttribute("picture"));
-      oauth2User.getAuthorities().stream()
-              .filter(a -> a.getAuthority().startsWith("ROLE_"))
-              .findFirst()
-              .ifPresent(authority -> userInfo.put("role", authority.getAuthority().replace("ROLE_", "")));
     } else {
       userInfo.put("message", "로그인되지 않았습니다.");
     }
@@ -55,5 +55,14 @@ public class MemberController {
     }
 
     return new ResponseEntity<>("Logout successful", HttpStatus.OK);
+  }
+
+  @DeleteMapping("/member")
+  public ResponseEntity<String> deleteMember(@AuthenticationPrincipal OAuth2User oauth2User) {
+    if (oauth2User == null) {
+      throw new RuntimeException("OAuth2User is null");
+    }
+    String email = oauth2User.getAttribute("email");
+    return ResponseEntity.ok(memberService.deleteMember(email));
   }
 }
