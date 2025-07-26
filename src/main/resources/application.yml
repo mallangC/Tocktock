@@ -37,6 +37,7 @@ spring:
             client-secret: ${GOOGLE_CLIENT_SECRET}
             redirect-uri: ${BACKEND_URL:https://api.tock-tock.com}/login/oauth2/code/google
             scope:
+              - openid
               - email
               - profile
         provider:
