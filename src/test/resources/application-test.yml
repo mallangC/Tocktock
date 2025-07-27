@@ -59,8 +59,6 @@ logging:
     org.springframework.boot.actuate: INFO
     org.springframework.web.servlet.mvc.method.annotation.RequestResponseBodyMethodProcessor: INFO
     org.springframework.web.servlet.mvc.method.annotation.HttpEntityMethodProcessor:
-    org.hibernate.SQL: INFO
-
 
 base:
   url: ${BASE_URL:https://tock-tock.com}
