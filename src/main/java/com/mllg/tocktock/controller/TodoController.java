@@ -73,7 +73,6 @@ public class TodoController {
         return ResponseEntity.ok("할 일 삭제 성공");
     }
 
-
     @GetMapping("/complete")
     public ResponseEntity<TodolistDto> getAllTodoComplete(@AuthenticationPrincipal OAuth2User oauth2User) {
         if (oauth2User == null) {

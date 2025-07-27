@@ -33,7 +33,7 @@ jobs:
           rm -rf ~/.gradle/caches/
           rm -rf build/
 
-      - name: Build and Start MySQL Containers with Docker Compose
+      - name: Build and Start MySQL, Redis Containers with Docker Compose
         run: |
           docker compose -f ./src/test/resources/docker-compose.yml up -d --build --wait
 
@@ -55,14 +55,19 @@ jobs:
       - name: Test with Gradle
         env:
           SPRING_PROFILES_ACTIVE: test
-          TEST_DB_PORT: 3306
-          TEST_DB_USERNAME: root
-          TEST_DB_PASSWORD: rootpassword
+          TEST_DB_URL: jdbc:mysql://127.0.0.1:3306/test_db
+          DB_USERNAME: root
+          DB_PASSWORD: rootpassword
 
         run: ./gradlew test --info
 
       - name: Generate JaCoCo Report
         run: ./gradlew jacocoTestReport
+
+      - name: Verify JaCoCo Report Path
+        run: |
+          ls -la ${{ github.workspace }}/build/reports/jacoco/test/
+          cat ${{ github.workspace }}/build/reports/jacoco/test/jacocoTestReport.xml   
 
       - name: JaCoCo Report to PR
         uses: madrapps/jacoco-report@v1.7.1
@@ -70,4 +75,4 @@ jobs:
           paths: ${{ github.workspace }}/build/reports/jacoco/test/jacocoTestReport.xml
           token: ${{ secrets.GITHUB_TOKEN }}
           title: 'Code Coverage'
-          update-comment: true
+          update-comment: false
