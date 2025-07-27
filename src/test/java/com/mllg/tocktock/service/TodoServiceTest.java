@@ -18,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -381,6 +382,43 @@ class TodoServiceTest {
                 todoService.deleteTodo(email, 3));
         //then
         assertEquals(ErrorCode.NOT_FOUND_TODO, exception.getErrorCode());
+    }
+
+    @Test
+    @DisplayName("Todo 삭제 실패 - 오늘 이전에 완료된 할 일")
+    void deleteTodoFailure4() {
+        //given
+        given(memberRepository.existsByEmail(anyString()))
+                .willReturn(true);
+
+        Member member = Member.builder()
+                .id(1L)
+                .email("test@email.com")
+                .name("test")
+                .provider("google")
+                .role(MemberType.USER)
+                .todoList(new ArrayList<>(List.of(Todo.builder()
+                                .id(2L)
+                                .todoOrder(0)
+                                .content("Todo id 2 content")
+                                .isDone(false)
+                                .build(),
+                        Todo.builder()
+                                .id(1L)
+                                .todoOrder(1)
+                                .content("Todo id 1 content")
+                                .isDone(true)
+                                .completedAt(LocalDateTime.now().minusDays(1))
+                                .build()
+                )))
+                .build();
+        given(todoRepository.searchAllTodoByToday(anyString()))
+                .willReturn(member.getTodoList());
+        //when
+        CustomException exception = assertThrows(CustomException.class, () ->
+                todoService.deleteTodo(email, 1));
+        //then
+        assertEquals(ErrorCode.CANNOT_DELETE_TODO_COMPLETED_BEFORE_TODAY, exception.getErrorCode());
     }
 
     @Test

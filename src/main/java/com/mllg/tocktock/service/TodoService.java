@@ -15,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @RequiredArgsConstructor
@@ -133,8 +135,14 @@ public class TodoService {
         if (findTodo.isEmpty()) {
             throw new CustomException(ErrorCode.NOT_FOUND_TODO);
         }
+        LocalDateTime today = LocalDate.now().atStartOfDay();
 
-        todoRepository.delete(findTodo.get());
+        Todo todo = findTodo.get();
+        if (todo.getCompletedAt() != null && todo.getCompletedAt().isBefore(today)) {
+            throw new CustomException(ErrorCode.CANNOT_DELETE_TODO_COMPLETED_BEFORE_TODAY);
+        }
+
+        todoRepository.delete(todo);
         for (int i = 0; i < todolist.size(); i++) {
             todolist.get(i).updateOrder(i);
         }
