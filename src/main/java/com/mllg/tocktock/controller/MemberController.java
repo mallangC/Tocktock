@@ -25,44 +25,43 @@ import java.util.Map;
 @RestController
 public class MemberController {
 
-  private final MemberService memberService;
+    private final MemberService memberService;
+    private final SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
 
-  @GetMapping("/member/profile")
-  public Map<String, Object> getUserInfo(@AuthenticationPrincipal OAuth2User oauth2User) {
-    Map<String, Object> userInfo = new HashMap<>();
-    if (oauth2User != null) {
-      userInfo.put("name", oauth2User.getAttribute("name"));
-      userInfo.put("email", oauth2User.getAttribute("email"));
-      userInfo.put("picture", oauth2User.getAttribute("picture"));
-    } else {
-      userInfo.put("message", "로그인되지 않았습니다.");
-    }
-    return userInfo;
-  }
 
-  private final SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
-
-  @PostMapping("/logout")
-  public ResponseEntity<String> performLogout(HttpServletRequest request, HttpServletResponse response) {
-    // 현재 인증 정보 가져오기
-    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    if (auth != null) {
-      // Spring Security의 로그아웃 핸들러를 사용하여 세션 무효화 및 쿠키 삭제
-      logoutHandler.logout(request, response, auth);
-      System.out.println("로그아웃 성공: " + auth.getName() + " 세션 무효화 및 JSESSIONID 쿠키 삭제");
-    } else {
-      System.out.println("로그아웃 요청 수신: 인증된 사용자가 없습니다.");
+    @GetMapping("/member/profile")
+    public Map<String, Object> getUserInfo(@AuthenticationPrincipal OAuth2User oauth2User) {
+        Map<String, Object> userInfo = new HashMap<>();
+        if (oauth2User != null) {
+            userInfo.put("name", oauth2User.getAttribute("name"));
+            userInfo.put("email", oauth2User.getAttribute("email"));
+            userInfo.put("picture", oauth2User.getAttribute("picture"));
+        } else {
+            userInfo.put("message", "로그인되지 않았습니다.");
+        }
+        return userInfo;
     }
 
-    return new ResponseEntity<>("Logout successful", HttpStatus.OK);
-  }
 
-  @DeleteMapping("/member")
-  public ResponseEntity<String> deleteMember(@AuthenticationPrincipal OAuth2User oauth2User) {
-    if (oauth2User == null) {
-      throw new RuntimeException("OAuth2User is null");
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(HttpServletRequest request, HttpServletResponse response) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null) {
+            logoutHandler.logout(request, response, auth);
+            log.info("로그아웃 성공: {} & 세션 무효화 및 JSESSIONID 쿠키 삭제", auth.getName());
+        } else {
+            log.info("로그아웃 요청 수신: 인증된 사용자가 없습니다.");
+        }
+
+        return new ResponseEntity<>("Logout successful", HttpStatus.OK);
     }
-    String email = oauth2User.getAttribute("email");
-    return ResponseEntity.ok(memberService.deleteMember(email));
-  }
+
+    @DeleteMapping("/member")
+    public ResponseEntity<String> deleteMember(@AuthenticationPrincipal OAuth2User oauth2User) {
+        if (oauth2User == null) {
+            throw new RuntimeException("OAuth2User is null");
+        }
+        String email = oauth2User.getAttribute("email");
+        return ResponseEntity.ok(memberService.deleteMember(email));
+    }
 }

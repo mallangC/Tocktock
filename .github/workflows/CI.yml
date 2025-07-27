@@ -33,7 +33,7 @@ jobs:
           rm -rf ~/.gradle/caches/
           rm -rf build/
 
-      - name: Build and Start MySQL Containers with Docker Compose
+      - name: Build and Start MySQL, Redis Containers with Docker Compose
         run: |
           docker compose -f ./src/test/resources/docker-compose.yml up -d --build --wait
 
@@ -56,8 +56,8 @@ jobs:
         env:
           SPRING_PROFILES_ACTIVE: test
           TEST_DB_PORT: 3306
-          TEST_DB_USERNAME: root
-          TEST_DB_PASSWORD: rootpassword
+          DB_USERNAME: root
+          DB_PASSWORD: rootpassword
 
         run: ./gradlew test --info
 

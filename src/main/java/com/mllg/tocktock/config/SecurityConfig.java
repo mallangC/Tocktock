@@ -41,7 +41,6 @@ public class SecurityConfig {
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .defaultSuccessUrl(baseUrl + "/loginSuccess", true)
-                        .failureUrl("/loginFailure")
                         .userInfoEndpoint(userInfo -> userInfo.oidcUserService(customOAuth2UserService))
                 )
                 .exceptionHandling(exception -> exception
@@ -51,7 +50,6 @@ public class SecurityConfig {
                         .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler())
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
-                        .logoutSuccessUrl(baseUrl + "/login")
                 );
 
         return http.build();
