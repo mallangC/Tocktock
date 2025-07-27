@@ -55,7 +55,7 @@ jobs:
       - name: Test with Gradle
         env:
           SPRING_PROFILES_ACTIVE: test
-          TEST_DB_PORT: 3306
+          TEST_DB_URL: jdbc:mysql://127.0.0.1:3306/test_db
           DB_USERNAME: root
           DB_PASSWORD: rootpassword
 
