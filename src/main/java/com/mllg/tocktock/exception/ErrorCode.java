@@ -12,7 +12,8 @@ public enum ErrorCode {
 
   NOT_MATCHED_GOOGLE(HttpStatus.BAD_REQUEST , "구글 로그인이 아닙니다"),
 
-  NOT_FOUND_TODO(HttpStatus.BAD_REQUEST , "todo를 찾을 수 없습니다"),
+  NOT_FOUND_TODO(HttpStatus.BAD_REQUEST , "할 일을 찾을 수 없습니다"),
+  CANNOT_DELETE_TODO_COMPLETED_BEFORE_TODAY(HttpStatus.BAD_REQUEST , "오늘 이전에 완료된 할 일은 삭제할 수 없습니다."),
 
 
 
