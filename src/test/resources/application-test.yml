@@ -13,9 +13,12 @@ spring:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
 
+  flyway:
+    enabled: true
+
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: none
     database-platform: org.hibernate.dialect.MySQL8Dialect
     properties:
       hibernate:
