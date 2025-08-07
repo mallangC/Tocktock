@@ -2,6 +2,7 @@ services:
   jogak_backend_app:
     image: mallangc/tocktock-backend:1.0.1
     container_name: tocktock-backend
+    restart: always
     environment:
       TZ: Asia/Seoul
       DB_URL: ${DB_URL}
@@ -15,6 +16,15 @@ services:
       - "8080:8080"
     volumes:
       - /etc/localtime:/etc/localtime:ro
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "1"
+    deploy:
+      resources:
+        limits:
+          memory: 600m
     depends_on:
       - redis
 
