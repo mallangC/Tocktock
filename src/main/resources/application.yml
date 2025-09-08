@@ -55,14 +55,15 @@ server:
 
 logging:
   level:
-#    org.springframework.security: DEBUG
     org.springframework.security.oauth2: DEBUG
     org.springframework.web: DEBUG
     org.springframework.web.servlet.DispatcherServlet: INFO
     org.springframework.boot.actuate: INFO
     org.springframework.web.servlet.mvc.method.annotation.RequestResponseBodyMethodProcessor: INFO
     org.springframework.web.servlet.mvc.method.annotation.HttpEntityMethodProcessor: INFO
-
+    org.flywaydb: DEBUG
+    com.mllg.tocktock: INFO
+    com.mllg.tocktock.global.exception: ERROR
 
 base:
   url: ${BASE_URL:https://tock-tock.com}
