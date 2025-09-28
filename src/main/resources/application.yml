@@ -8,7 +8,7 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     hikari:
-      maximum-pool-size: 30
+      maximum-pool-size: 100
       connection-timeout: 30000
       idle-timeout: 600000
       minimum-idle: 10
@@ -72,3 +72,9 @@ logging:
 
 base:
   url: ${BASE_URL:https://tock-tock.com}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, metrics
