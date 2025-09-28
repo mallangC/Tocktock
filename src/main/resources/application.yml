@@ -7,6 +7,11 @@ spring:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 30
+      connection-timeout: 30000
+      idle-timeout: 600000
+      minimum-idle: 10
 
   data:
     redis:
