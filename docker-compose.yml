@@ -12,6 +12,7 @@ services:
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      JAVA_OPTS: "-Xmx512m"
     ports:
       - "8080:8080"
     volumes:
@@ -25,6 +26,7 @@ services:
       resources:
         limits:
           memory: 600m
+    cpus: 0.5
     depends_on:
       - redis
 
