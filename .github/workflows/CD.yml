@@ -121,32 +121,32 @@ jobs:
         shell: bash
 
       # 파일 전송 단계 (.env 및 docker-compose.yml)
-      - name: Copy .env and docker-compose.yml to EC2
+      - name: Copy .env and docker-compose.yml to Lightsail
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ${{ secrets.LIGHTSAIL_USER }}
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
           # 보낼 파일들
           source: ".env,docker-compose.yml"
-          # EC2 인스턴스 내의 대상 디렉토리
-          target: "/home/${{ secrets.EC2_USER }}/tocktock"
+          # Lightsail 인스턴스 내의 대상 디렉토리
+          target: "/home/${{ secrets.LIGHTSAIL_USER }}/tocktock"
 
-      # EC2에서 Docker Compose 실행 단계
-      - name: SSH into EC2 and run Docker Compose
+      # Lightsail에서 Docker Compose 실행 단계
+      - name: SSH into Lightsail and run Docker Compose
         uses: appleboy/ssh-action@v0.1.10
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ${{ secrets.LIGHTSAIL_USER }}
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
           script: |
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
             
-            cd /home/${{ secrets.EC2_USER }}/tocktock
+            cd /home/${{ secrets.LIGHTSAIL_USER }}/tocktock
             
             docker compose pull
             docker compose up -d --force-recreate
             
             docker image prune -f
             docker logout
-            echo "Deployment to EC2 completed successfully!"
+            echo "Deployment to Lightsail completed successfully!"

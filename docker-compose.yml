@@ -29,6 +29,23 @@ services:
           memory: 600m
     depends_on:
       - redis
+    networks:
+      - backend-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: tocktock-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      TZ: Asia/Seoul
+    ports:
+     - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - backend-network
 
   redis:
     image: redis:latest
@@ -37,3 +54,13 @@ services:
       - "6379:6379"
     environment:
       TZ: Asia/Seoul
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend-network
+networks:
+  backend-network:
+    driver: bridge
+volumes:
+  redis_data:
+    driver: local
