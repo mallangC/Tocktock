@@ -25,8 +25,8 @@ services:
     deploy:
       resources:
         limits:
+          cpus: '0.5'
           memory: 600m
-    cpus: 0.5
     depends_on:
       - redis
 
